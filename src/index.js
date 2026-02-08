@@ -18,18 +18,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// app.post("/upload", upload.single("image"), async (req, res) => {
-//   try {
-//     const result = await cloudinary.uploader.upload(req.file.path, {
-//       folder: "wedding", // <-- This ensures all uploads go to the "wedding" folder
-//     });
-//     fs.unlinkSync(req.file.path);
-//     res.json({ url: result.secure_url });
-//     console.log("Uploaded to:", result.public_id);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
 const path = require("path");
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
@@ -48,7 +36,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     const base = path.basename(req.file.originalname, ext);
 
     const result = await cloudinary.uploader.upload(uploadPath, {
-      folder: "wedding",
+      folder: "BrentJurkovski",
       public_id: `${base}-${uniqueSuffix}`,
     });
     fs.unlinkSync(uploadPath);
@@ -59,11 +47,11 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-// Endpoint to get all images in the "wedding" folder
+// Endpoint to get all images in the "Brent" folder
 app.get("/images", async (req, res) => {
   try {
     const result = await cloudinary.search
-      .expression("folder:wedding")
+      .expression("folder:BrentJurkovski")
       .sort_by("public_id", "desc")
       .max_results(2000)
       .execute();
