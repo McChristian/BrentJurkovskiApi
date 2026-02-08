@@ -4,6 +4,7 @@ const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 const fs = require("fs");
+const sharp = require("sharp");
 
 dotenv.config();
 
@@ -17,30 +18,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// app.post("/upload", upload.single("image"), async (req, res) => {
-//   try {
-//     const result = await cloudinary.uploader.upload(req.file.path, {
-//       folder: "wedding", // <-- This ensures all uploads go to the "wedding" folder
-//     });
-//     fs.unlinkSync(req.file.path);
-//     res.json({ url: result.secure_url });
-//     console.log("Uploaded to:", result.public_id);
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
 const path = require("path");
 app.post("/upload", upload.single("image"), async (req, res) => {
   try {
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    let uploadPath = req.file.path;
+
+    // If HEIC, convert to JPEG
+    if (ext === ".heic" || ext === ".heif") {
+      const jpgPath = req.file.path + ".jpg";
+      await sharp(req.file.path).jpeg().toFile(jpgPath);
+      fs.unlinkSync(req.file.path); // Remove original .heic
+      uploadPath = jpgPath;
+    }
+
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const ext = path.extname(req.file.originalname);
     const base = path.basename(req.file.originalname, ext);
 
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "wedding",
+    const result = await cloudinary.uploader.upload(uploadPath, {
+      folder: "BrentJurkovski",
       public_id: `${base}-${uniqueSuffix}`,
     });
-    fs.unlinkSync(req.file.path);
+    fs.unlinkSync(uploadPath);
     res.json({ url: result.secure_url });
     console.log("Uploaded to:", result.public_id);
   } catch (err) {
@@ -48,11 +47,11 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   }
 });
 
-// Endpoint to get all images in the "wedding" folder
+// Endpoint to get all images in the "Brent" folder
 app.get("/images", async (req, res) => {
   try {
     const result = await cloudinary.search
-      .expression("folder:wedding")
+      .expression("folder:BrentJurkovski")
       .sort_by("public_id", "desc")
       .max_results(2000)
       .execute();
